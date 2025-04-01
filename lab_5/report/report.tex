@@ -1,0 +1,15 @@
+\documentclass[a4paper, 12pt]{extreport}
+
+\input{./chapters/preambula.tex}
+
+\begin{document}
+	\include{./chapters/title.tex}
+	\setcounter{page}{2}
+	
+	\def\contentsname{\begin{center}\Large СОДЕРЖАНИЕ\end{center}}
+	\tableofcontents
+	\include{./chapters/intro.tex}
+	\include{./chapters/content.tex}
+	\include{./chapters/conclusion.tex}
+	\include{./chapters/bibliography.tex}
+\end{document}

@@ -1,0 +1,101 @@
+\chapter{Технологическая часть}
+
+\section{Выбор языка программирования}
+
+Для реализации указанных алгоритмов был выбран язык C++, т.~к. данный язык предоставляет возможность работать с динамической памятью с помощью контейнерных классов.
+
+Для визуализации данных использовался язык Python, т.~к. данный язык обладает большим выбором библиотек для выполнения этой задачи. В лабораторной работе использовалась библиотека matplotlib~\cite{plt}.
+
+В качестве IDE был выбран Clion, т.~к. обладает функциями подсветки синтаксиса и автодополнения для обоих указанных языков. Также в данной IDE реализована поддержка средства автоматизированной сборки проектов cmake.
+
+\section{Реализации алгоритмов}
+
+В листингах ниже представлены реализации указанных алгоритмов:
+\begin{itemize}[label=---]
+	\item в листинге~\ref{lst:linear} --- реализация линейного поиска;
+	\item в листинге~\ref{lst:binary} --- реализация бинарного поиска.
+\end{itemize}
+
+Данные реализации дополнительно возвращают число сравнений, необходимое для дальнейшего анализа.
+\clearpage
+\begin{lstlisting}[caption={Функция линейного поиска}, label=lst:linear]
+	pair<int, int> linear_search(const vector<int> &a, int elem_to_find) {
+		int i, cnt = 1;
+		for (i = 0; i < a.size() && a[i] != elem_to_find; ++i, cnt++) {}
+		return {(i == a.size() ? -1 : i), (i == a.size() ? cnt - 1 : cnt)};
+	}
+\end{lstlisting}
+\begin{lstlisting}[caption={Функция бинарного поиска}, label=lst:binary]
+	pair<int, int> binary_search(const vector<int> &a, int elem_to_find) {
+		int l = -1, r = a.size(), m, cnt = 0;
+		while (r - l > 1) {
+			m = (r + l) / 2;
+			if (a[m] == elem_to_find) {
+				++cnt;
+				return {m, cnt};
+			} else if (a[m] > elem_to_find) {
+				cnt += 2;
+				r = m;
+			} else {
+				cnt += 2;
+				l = m;
+			}
+		}
+		return {-1, cnt};
+	}
+\end{lstlisting}
+
+\section{Тестирование}
+Для тестирования алгоритмов, тестовые случаи были разбиты на классы эквивалентности. В таблице~\ref{tab:lin_tests} приведены тесты для линейного поиска. В таблице~\ref{tab:bin_tests} для бинарного поиска соответственно.
+
+\begin{table}[H]
+	\centering
+	\caption{Тестовые случаи для алгоритма линейного поиска}
+	\begin{tabular}{|c|c|c|c|c|c|}
+		\hline
+		\multirow[c]{2}{*}{\shortstack{Классы\\эквивалентности}} & \multirow[c]{2}{*}{Входные данные} & \multicolumn{2}{c|}{\shortstack{Ожидаемые\\выходные данные}} & \multicolumn{2}{c|}{\shortstack{Полученные\\выходные данные}} \\
+		\hhline{|~|~|-|-|-|-|}
+		&& Индекс & \shortstack{Число\\сравнений} & Индекс & \shortstack{Число\\сравнений}\\
+		\hline
+		\shortstack{Искомый элемент\\первый} & \shortstack{1, 2, 3, 4, 5\\1} & 0 & 1 & 0 & 1 \\
+		\hline 
+		\shortstack{Искомый элемент\\последний} & \shortstack{1, 2, 3, 4, 5\\5} & 4 & 5 & 4 & 5 \\
+		\hline 
+		\shortstack{Искомый элемент\\центральный} & \shortstack{1, 2, 3, 4, 5\\3} & 2 & 3 & 2 & 3 \\
+		\hline 
+		\shortstack{Искомый элемент\\отсутствует} & \shortstack{1, 2, 3, 4, 5\\-1} & -1 & 5 & -1 & 5 \\
+		\hline
+		\shortstack{Массив пуст} & \shortstack{<<>>\\5} & -1 & 0 & -1 & 0 \\
+		\hline  
+		\end{tabular}
+	\label{tab:lin_tests}
+\end{table}
+\begin{table}[H]
+	\centering
+	\caption{Тестовые случаи для алгоритма бинарного поиска}
+	\begin{tabular}{|c|c|c|c|c|c|}
+		\hline
+		\multirow[c]{2}{*}{\shortstack{Классы\\эквивалентности}} & \multirow[c]{2}{*}{Входные данные} & \multicolumn{2}{c|}{\shortstack{Ожидаемые\\выходные данные}} & \multicolumn{2}{c|}{\shortstack{Полученные\\выходные данные}} \\
+		\hhline{|~|~|-|-|-|-|}
+		&& Индекс & \shortstack{Число\\сравнений} & Индекс & \shortstack{Число\\сравнений}\\
+		\hline
+		\shortstack{Искомый элемент\\первый} & \shortstack{1, 2, 3, 4, 5\\1} & 0 & 3 & 0 & 3 \\
+		\hline 
+		\shortstack{Искомый элемент\\последний} & \shortstack{1, 2, 3, 4, 5\\5} & 4 & 5 & 4 & 5 \\
+		\hline 
+		\shortstack{Искомый элемент\\центральный} & \shortstack{1, 2, 3, 4, 5\\3} & 2 & 1 & 2 & 1 \\
+		\hline 
+		\shortstack{Искомый элемент\\отсутствует} & \shortstack{1, 2, 3, 4, 5\\-1} & -1 & 4 & -1 & 4 \\
+		\hline
+		\shortstack{Массив пуст} & \shortstack{<<>>\\5} & -1 & 0 & -1 & 0 \\
+		\hline  
+	\end{tabular}
+	\label{tab:bin_tests}
+\end{table}
+
+Для проведения тестирования использовалась библиотека Google Tests~\cite{gtest}. 
+\section*{Вывод}
+
+Были реализованы алгоритмы поиска элемента в массиве и проведено их тестирование. Все тесты были успешно пройдены.
+
+\clearpage
