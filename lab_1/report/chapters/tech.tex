@@ -1,0 +1,229 @@
+\chapter{Технологическая часть}
+
+\section{Выбор языка программирования}
+
+Для реализации указанных алгоритмов и выполнения лабораторной работы был выбран язык C++, т.~к. программа на нем может быть запущена на микроконтроллере для замеров времени работы алгоритма. Также данный язык предоставляет возможность работать с динамической памятью с помощью контейнерных классов.
+
+Была выбрана IDE Arduino-IDE, т.~к. она дает возможность запускать код на выбранном языке напрямую на микроконтроллере, обладает функциями автодополнения и подсветки синтаксиса.
+
+\section{Реализации алгоритмов}
+
+В листингах ниже представлены реализации указанных алгоритмов:
+\begin{itemize}[label=---]
+	\item в листинге~\ref{lst:lev_rec} --- рекурсивная реализация алгоритма поиска расстояния Левенштейна;
+	\item в листинге~\ref{lst:lev_rec_mem_1} и~\ref{lst:lev_rec_mem_2} --- рекурсивные реализации алгоритма с мемоизацией. Первая функция является интерфейсной, вторая необходима для использования матрицы с уже рассчитанными значениями;
+	\item в листинге~\ref{lst:lev_iter} --- итерационная реализация с использованием подхода динамического программирования;
+	\item в листинге~\ref{lst:dam_lev_iter} --- итерационная реализация алгоритма поиска расстояния Дамерау---Левенштейна с использованием подхода динамического программирования.
+\end{itemize}
+\clearpage
+\begin{lstlisting}[caption={Рекурсивная функция поиска расстояния Левенштейна}, label=lst:lev_rec]
+	int levenstein_recursion(const string &s1, const string &s2) {
+		if (s1.empty())
+			return static_cast<int>(s2.size());
+		else if (s2.empty())
+			return static_cast<int>(s1.size());
+		else {
+			int ans = min(levenstein_recursion(s1.substr(0, s1.size() - 1), s2),
+			levenstein_recursion(s1, s2.substr(0, s2.size() - 1))) + 1;
+			if (s1[s1.size() - 1] == s2[s2.size() - 1])
+				return min(ans, levenstein_recursion(s1.substr(0, s1.size() - 1), s2.substr(0, s2.size() - 1)));
+			else
+				return min(ans, levenstein_recursion(s1.substr(0, s1.size() - 1), s2.substr(0, s2.size() - 1)) + 1);
+		}
+	}
+\end{lstlisting}
+\begin{lstlisting}[caption={Вызываемая функция рекурсивного поиска расстояния Левенштейна с мемоизацией}, label=lst:lev_rec_mem_1]
+	int levenstein_recursion_memoization(const string &s1, const string &s2) {
+		int n = static_cast<int>(s1.size()) + 1, m = static_cast<int>(s2.size()) + 1;
+		if (s1.empty())
+			return static_cast<int>(s2.size());
+		else if (s2.empty())
+			return static_cast<int>(s1.size());
+		else {
+			vector <vector<int>> dp(n, vector<int>(m, -1));
+			return dp[s1.size()][s2.size()] = levenstein_recursion_memoization(s1, s2, dp);
+		}
+	}
+\end{lstlisting}
+\begin{lstlisting}[caption={Перегруженная функция рекурсивного поиска расстояния Левенштейна с мемоизацией}, label=lst:lev_rec_mem_2]
+	int levenstein_recursion_memoization(const string &s1, const string &s2, vector <vector<int>> &dp) {
+		if (dp[s1.size()][s2.size()] == -1) {
+			if (s1.empty())
+				return static_cast<int>(s2.size());
+			else if (s2.empty())
+				return static_cast<int>(s1.size());
+			else {
+				dp[s1.size()][s2.size()] = min(levenstein_recursion_memoization(s1.substr(0, s1.size() - 1), s2, dp),
+				levenstein_recursion_memoization(s1, s2.substr(0, s2.size() - 1), dp)) +
+				1;
+				if (s1[s1.size() - 1] == s2[s2.size() - 1])
+					return dp[s1.size()][s2.size()] = min(dp[s1.size()][s2.size()],
+					levenstein_recursion(s1.substr(0, s1.size() - 1),
+					s2.substr(0, s2.size() - 1)));
+				else
+					return dp[s1.size()][s2.size()] = min(dp[s1.size()][s2.size()],
+					levenstein_recursion(s1.substr(0, s1.size() - 1),
+					s2.substr(0, s2.size() - 1)) + 1);
+			}
+		}
+		return dp[s1.size()][s2.size()];
+	}
+	
+\end{lstlisting}
+\clearpage
+\begin{lstlisting}[caption={Функция нерекурсивного поиска расстояния Левенштейна}, label=lst:lev_iter]
+	int levenstein(const string &s1, const string &s2) {
+		int n = static_cast<int>(s1.size()) + 1,
+		m = static_cast<int>(s2.size()) + 1;
+		vector <vector<int>> dp(2, vector<int>(m));
+		for (int j = 1; j < m; ++j)
+		dp[0][j] = j;
+		int cur = 1, prev = 0;
+		for (int i = 1; i < n; ++i) {
+			dp[cur][0] = i;
+			for (int j = 1; j < m; ++j) {
+				dp[cur][j] = min(dp[cur][j - 1], dp[prev][j]) + 1;
+				if (s1[i - 1] == s2[j - 1])
+					dp[cur][j] = min(dp[cur][j], dp[prev][j - 1]);
+				else
+					dp[cur][j] = min(dp[cur][j], dp[prev][j - 1] + 1);
+			}
+			cur ^= 1, prev ^= 1;
+		}
+		return dp[prev][m - 1];
+	}
+	
+\end{lstlisting}
+\begin{lstlisting}[caption={Функция нерекурсивного поиска расстояния Дамерау---Левенштейна}, label=lst:dam_lev_iter]
+	int damerau_levenstein(const string &s1, const string &s2) {
+		int n = static_cast<int>(s1.size()) + 1, m = static_cast<int>(s2.size()) + 1;
+		vector <vector<int>> dp(3, vector<int>(m));
+		for (int i = 1; i < m; ++i) {
+			dp[0][i] = i;
+		}
+		int cur = 1, prev = 0, pprev = -1;
+		for (int i = 1; i < n; ++i) {
+			dp[cur][0] = i;
+			for (int j = 1; j < m; ++j) {
+				dp[cur][j] = min(dp[prev][j], dp[cur][j - 1]) + 1;
+				if (s1[i - 1] == s2[j - 1])
+					dp[cur][j] = min(dp[cur][j], dp[prev][j - 1]);
+				else
+					dp[cur][j] = min(dp[cur][j], dp[prev][j - 1] + 1);
+				if (i > 1 && j > 1 && s1[i - 1] == s2[j - 2] && s1[i - 2] == s2[j - 1])
+					dp[cur][j] = min(dp[cur][j], dp[pprev][j - 2] + 1);
+			}
+			cur = static_cast<int>((cur + 1) % dp.size()),
+			prev = static_cast<int>((prev + 1) % dp.size()),
+			pprev = static_cast<int>((pprev + 1) % dp.size());
+		}
+		return dp[prev][m - 1];
+	}
+	
+\end{lstlisting}
+
+\section{Тестирование}
+Для тестирования алгоритмов, тестовые случаи были разбиты на классы эквивалентности. В таблице~\ref{tab:lev_tests} приведены тесты для алгоритма поиска расстояния Левенштейна, в таблице~\ref{tab:dam_lev_tests} --- для поиска расстояния Дамерау-Левенштейна.
+
+\begin{table}[H]
+	\centering
+	\caption{Тестовые случаи для алгоритма поиска расстояния Левенштейна}
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		\shortstack{Классы\\ эквивалентности} & Входные данные & \shortstack{Ожидаемые \\выходные данные} & \shortstack{Полученные\\ выходные данные} \\
+		\hline
+		Равные строки & \multicolumn{1}{l|}{\shortstack{<<abracadabra>>\\ <<abracadabra>>}} & 0 & 0\\
+		\hline
+		Пустая первая строка & \multicolumn{1}{l|}{\shortstack{<<>>\\ <<code>>}} & 4 & 4\\
+		\hline
+		Пустая вторая строка & \multicolumn{1}{l|}{\shortstack{<<code>>\\ <<>>}} & 4 & 4 \\
+		\hline
+		Замена букв & \multicolumn{1}{l|}{\shortstack{<<cap>>\\<<cat>>}} & 1 & 1\\
+		\hline
+		Добавление/удаление букв & \multicolumn{1}{l|}{\shortstack{<<fake>>\\ <<break>>}} & 4 & 4\\
+		\hline 
+	\end{tabular}
+	\label{tab:lev_tests}
+\end{table}
+\begin{table}[H]
+	\centering
+	\caption{Тестовые случаи для алгоритма поиска расстояния Дамерау --- Левенштейна}
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		\shortstack{Классы\\ эквивалентности} & Входные данные & \shortstack{Ожидаемые \\выходные данные} & \shortstack{Полученные\\ выходные данные} \\
+		\hline
+		Равные строки & \multicolumn{1}{l|}{\shortstack{<<abracadabra>>\\ <<abracadabra>>}} & 0 & 0\\
+		\hline
+		Пустая первая строка & \multicolumn{1}{l|}{\shortstack{<<>>\\ <<code>>}} & 4 & 4\\
+		\hline
+		Пустая вторая строка & \multicolumn{1}{l|}{\shortstack{<<code>>\\ <<>>}} & 4 & 4 \\
+		\hline
+		Замена букв & \multicolumn{1}{l|}{\shortstack{<<cap>>\\<<cat>>}} & 1 & 1\\
+		\hline
+		Добавление/удаление букв & \multicolumn{1}{l|}{\shortstack{<<fake>>\\ <<break>>}} & 4 & 4\\
+		\hline 
+		Транспозиция букв & \multicolumn{1}{l|}{\shortstack{<<cpu>>\\ <<cup>>}} & 1 & 1\\
+		\hline
+	\end{tabular}
+	\label{tab:dam_lev_tests}
+\end{table}
+Для проведения тестирования использовалась библиотека Google Tests~\cite{gtest}. Пример модульного тестирования в листинге~\ref{lst:mod_tests}.
+\clearpage
+\begin{lstlisting}[caption={Тестовый набор и запуск модульных тестов}, label=lst:mod_tests]
+	TEST(DAM_LEV, equal_string) {
+		total_tests++;
+		string s1 = "abracadabra", s2 = "abracadabra";
+		int corr_ans = 0, ans = damerau_levenstein(s1, s2);
+		ASSERT_EQ(corr_ans, ans);
+	}
+	
+	TEST(DAM_LEV, empty_string_1) {
+		total_tests++;
+		string s1 = "", s2 = "code";
+		int corr_ans = 4, ans = damerau_levenstein(s1, s2);
+		ASSERT_EQ(corr_ans, ans);
+	}
+	
+	TEST(DAM_LEV, empty_string_2) {
+		total_tests++;
+		string s1 = "code", s2 = "";
+		int corr_ans = 4, ans = damerau_levenstein(s1, s2);
+		ASSERT_EQ(corr_ans, ans);
+	}
+	
+	TEST(DAM_LEV, swapped_letter_strings)
+	{
+		total_tests++;
+		string s1 = "cap", s2 = "cat";
+		int corr_ans = 1, ans = damerau_levenstein(s1, s2);
+		ASSERT_EQ(corr_ans, ans);
+	}
+	
+	TEST(DAM_LEV, complex_test_strings)
+	{
+		total_tests++;
+		string s1 = "fake", s2 = "break";
+		int corr_ans = 4, ans = damerau_levenstein(s1, s2);
+		ASSERT_EQ(corr_ans, ans);
+	}
+	
+	TEST(DAM_LEV, transposition_letters_strings)
+	{
+		total_tests++;
+		string s1 = "cpu", s2 = "cup";
+		int corr_ans = 1, ans = damerau_levenstein(s1, s2);
+		ASSERT_EQ(corr_ans, ans);
+	}
+	
+	int main(int argc, char **argv) {
+		testing::InitGoogleTest(&argc, argv);
+		int failed_cnt = RUN_ALL_TESTS();
+		cout<<"TESTS_PASSED "<<total_tests-failed_cnt<<'\n'<<"TESTS_FAILED "<<failed_cnt<<'\n';
+		return failed_cnt;
+	}
+\end{lstlisting}
+\section*{Вывод}
+
+Были реализованы алгоритмы поиска редакционных расстояний и проведено их тестирование. Все тесты были успешно пройдены.
+
+\clearpage
